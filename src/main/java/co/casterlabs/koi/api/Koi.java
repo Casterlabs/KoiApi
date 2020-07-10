@@ -19,13 +19,13 @@ import co.casterlabs.koi.api.events.UserUpdateEvent;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import xyz.e3ndr.FastLoggingFramework.Logging.FastLogger;
+import xyz.e3ndr.fastloggingframework.logging.FastLogger;
 
 public class Koi {
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.1.0";
 
-    private static @Getter URI KOI;
-    private static @Getter Gson GSON = new Gson();
+    private static @Getter URI koiUri;
+    private static @Getter Gson gson = new Gson();
 
     private EventListener listener;
     private FastLogger logger;
@@ -33,14 +33,14 @@ public class Koi {
 
     static {
         try {
-            KOI = new URI("wss://live.casterlabs.co/koi");
+            koiUri = new URI("wss://live.casterlabs.co/koi");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
     }
 
     public Koi(@NonNull EventListener listener) {
-        this(KOI, new FastLogger(), listener);
+        this(koiUri, new FastLogger(), listener);
     }
 
     @SneakyThrows
@@ -139,7 +139,7 @@ public class Koi {
         @Override
         public void onMessage(String raw) {
             try {
-                JsonObject packet = GSON.fromJson(raw, JsonObject.class);
+                JsonObject packet = gson.fromJson(raw, JsonObject.class);
 
                 switch (packet.get("type").getAsString()) {
                     case "KEEP_ALIVE":

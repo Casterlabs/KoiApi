@@ -27,7 +27,7 @@ public abstract class Event {
         Class<? extends Event> clazz = EVENTS.get(type);
 
         if (clazz != null) {
-            return Koi.getGSON().fromJson(event, clazz);
+            return Koi.getGson().fromJson(event, clazz);
         } else {
             return null;
         }
