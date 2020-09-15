@@ -1,14 +1,14 @@
 package co.casterlabs.koi.api.events;
 
 import co.casterlabs.koi.api.user.User;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-@Getter
-@ToString
+@Data
+@EqualsAndHashCode(callSuper = false)
 public class FollowEvent extends Event {
-    private User streamer;
     private User follower;
+    private User streamer;
 
     @Override
     public EventType getType() {

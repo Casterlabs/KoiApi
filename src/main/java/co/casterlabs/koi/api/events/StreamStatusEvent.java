@@ -3,14 +3,15 @@ package co.casterlabs.koi.api.events;
 import com.google.gson.annotations.SerializedName;
 
 import co.casterlabs.koi.api.user.User;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-@Getter
-@ToString
+@Data
+@EqualsAndHashCode(callSuper = false)
 public class StreamStatusEvent extends Event {
     @SerializedName("is_live")
     private boolean live;
+    private String title;
     private User streamer;
 
     @Override

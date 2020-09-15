@@ -11,3 +11,4 @@
 target/
 
 koi/*
+src/main/java/co/casterlabs/koi/api/Test.java

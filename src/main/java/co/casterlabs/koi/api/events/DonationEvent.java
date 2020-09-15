@@ -2,17 +2,14 @@ package co.casterlabs.koi.api.events;
 
 import com.google.gson.annotations.SerializedName;
 
-import co.casterlabs.koi.api.user.User;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-@Getter
-@ToString
-public class DonationEvent extends Event {
+@Data
+@EqualsAndHashCode(callSuper = false)
+public class DonationEvent extends ChatEvent {
     @SerializedName("usd_equivalent")
-    private double USDEquivalent;
-    private User streamer;
-    private User sender;
+    private double usdEquivalent;
     private String formatted;
     private String currency;
     private double amount;

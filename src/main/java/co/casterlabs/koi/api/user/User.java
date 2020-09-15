@@ -8,15 +8,15 @@ import lombok.ToString;
 @Getter
 @ToString
 public class User {
+    private UserPlatform platform;
+    private String UUID;
+    private String username;
+    private String displayname;
     @SerializedName("image_link")
     private String imageLink;
+    private String color;
+    private String link;
     @SerializedName("follower_count")
     private long followerCount;
-    @SerializedName("following_count")
-    private long followingCount;
-    private String UUID;
-    private String displayname;
-    private String username;
-    private UserPlatform platform;
 
 }

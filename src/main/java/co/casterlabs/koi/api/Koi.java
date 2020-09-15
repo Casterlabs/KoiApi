@@ -9,20 +9,16 @@ import org.java_websocket.handshake.ServerHandshake;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import co.casterlabs.koi.api.events.ChatEvent;
-import co.casterlabs.koi.api.events.DonationEvent;
 import co.casterlabs.koi.api.events.Event;
-import co.casterlabs.koi.api.events.FollowEvent;
-import co.casterlabs.koi.api.events.ShareEvent;
-import co.casterlabs.koi.api.events.StreamStatusEvent;
-import co.casterlabs.koi.api.events.UserUpdateEvent;
+import co.casterlabs.koi.api.events.EventType;
+import co.casterlabs.koi.api.user.UserPlatform;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import xyz.e3ndr.fastloggingframework.logging.FastLogger;
 
 public class Koi {
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.2.0";
 
     private static @Getter URI koiUri;
     private static @Getter Gson gson = new Gson();
@@ -33,7 +29,7 @@ public class Koi {
 
     static {
         try {
-            koiUri = new URI("wss://live.casterlabs.co/koi");
+            koiUri = new URI("wss://api.casterlabs.co/v1/koi");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -76,55 +72,31 @@ public class Koi {
     }
 
     public void add(String streamer) {
+        this.add(streamer, UserPlatform.CAFFEINE.name());
+    }
+
+    public void add(String streamer, String platform) {
         JsonObject request = new JsonObject();
 
         request.addProperty("request", "ADD");
         request.addProperty("user", streamer);
+        request.addProperty("platform", platform);
 
         this.socket.send(request.toString());
     }
 
     public void remove(String streamer) {
+        this.remove(streamer, UserPlatform.CAFFEINE.name());
+    }
+
+    public void remove(String streamer, String platform) {
         JsonObject request = new JsonObject();
 
         request.addProperty("request", "REMOVE");
         request.addProperty("user", streamer);
+        request.addProperty("platform", platform);
 
         this.socket.send(request.toString());
-    }
-
-    private void processEvent(JsonObject json) {
-        Event event = Event.fromJson(json);
-
-        if (event != null) {
-            this.listener.onEvent(event);
-
-            switch (event.getType()) {
-                case CHAT:
-                    this.listener.onChat((ChatEvent) event);
-                    break;
-
-                case DONATION:
-                    this.listener.onDonation((DonationEvent) event);
-                    break;
-
-                case FOLLOW:
-                    this.listener.onFollow((FollowEvent) event);
-                    break;
-
-                case SHARE:
-                    this.listener.onShare((ShareEvent) event);
-                    break;
-
-                case STREAM_STATUS:
-                    this.listener.onStreamStatus((StreamStatusEvent) event);
-                    break;
-
-                case USER_UPDATE:
-                    this.listener.onUserUpdate((UserUpdateEvent) event);
-                    break;
-            }
-        }
     }
 
     private class KoiSocket extends WebSocketClient {
@@ -151,8 +123,11 @@ public class Koi {
                         return;
 
                     case "EVENT":
-                        JsonObject event = packet.getAsJsonObject("event");
-                        processEvent(event);
+                        JsonObject eventJson = packet.getAsJsonObject("event");
+                        Event event = EventType.get(eventJson);
+
+                        Util.reflectInvoke(listener, event);
+
                         return;
                 }
             } catch (Exception e) {
