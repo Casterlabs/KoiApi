@@ -1,22 +1,30 @@
 package co.casterlabs.koi.api.user;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gson.annotations.SerializedName;
 
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
-@Getter
-@ToString
+@Data
+@RequiredArgsConstructor
 public class User {
-    private UserPlatform platform;
-    private String UUID;
-    private String username;
-    private String displayname;
+    private final UserPlatform platform;
+
     @SerializedName("image_link")
-    private String imageLink;
+    private String imageLink = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
+
+    @SerializedName("followers_count")
+    private long followersCount = -1;
+
+    private List<String> badges = new ArrayList<>();
+
     private String color;
-    private String link;
-    @SerializedName("follower_count")
-    private long followerCount;
+
+    private String username = "?";
+
+    private String UUID = "?";
 
 }

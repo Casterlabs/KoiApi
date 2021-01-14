@@ -1,23 +1,27 @@
 package co.casterlabs.koi.api.events;
 
+import java.util.List;
+
 import com.google.gson.annotations.SerializedName;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class DonationEvent extends ChatEvent {
-    @SerializedName("usd_equivalent")
-    private double usdEquivalent;
-    private String formatted;
-    private String currency;
-    private double amount;
-    private String image;
+    private List<Donation> donations;
 
-    @Override
-    public EventType getType() {
-        return EventType.DONATION;
+    @Data
+    @AllArgsConstructor
+    public static class Donation {
+        @SerializedName("animated_image")
+        private String animatedImage;
+        private String currency;
+        private double amount;
+        private String image;
+
     }
 
 }

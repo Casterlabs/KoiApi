@@ -1,13 +1,14 @@
 package co.casterlabs.koi.api.events;
 
+import java.util.Collection;
+
 import co.casterlabs.koi.api.user.User;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class SubscriptionEvent extends Event {
-    private User subscriber;
-    private int months;
+public class ViewerListEvent extends Event {
+    private Collection<User> viewers;
 
 }

@@ -6,8 +6,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class SubscriptionEvent extends Event {
-    private User subscriber;
-    private int months;
+public class ViewerJoinEvent extends Event {
+    private User viewer;
 
 }

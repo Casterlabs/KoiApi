@@ -1,5 +1,6 @@
 package co.casterlabs.koi.api;
 
+import java.io.Closeable;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -7,6 +8,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import co.casterlabs.koi.api.events.Event;
@@ -17,8 +19,8 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import xyz.e3ndr.fastloggingframework.logging.FastLogger;
 
-public class Koi {
-    public static final String VERSION = "1.2.0";
+public class Koi implements Closeable {
+    public static final String VERSION = "2.0.0";
 
     private static @Getter URI koiUri;
     private static @Getter Gson gson = new Gson();
@@ -27,9 +29,11 @@ public class Koi {
     private FastLogger logger;
     private KoiSocket socket;
 
+    private JsonObject request;
+
     static {
         try {
-            koiUri = new URI("wss://api.casterlabs.co/v1/koi");
+            koiUri = new URI("wss://api.casterlabs.co/v2/koi");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -46,57 +50,46 @@ public class Koi {
         this.socket = new KoiSocket(uri);
     }
 
+    @Override
     public void close() {
         this.socket.close();
-    }
-
-    @SneakyThrows
-    public Koi connectBlocking() {
-        if (!this.isConnected()) {
-            this.socket.connectBlocking();
-        }
-
-        return this;
-    }
-
-    public Koi connect() {
-        if (!this.isConnected()) {
-            this.socket.connect();
-        }
-
-        return this;
     }
 
     public boolean isConnected() {
         return this.socket.isOpen();
     }
 
-    public void add(String streamer) {
-        this.add(streamer, UserPlatform.CAFFEINE.name());
+    public Koi hookStreamStatus(String username, UserPlatform platform) {
+        if (this.isConnected()) {
+            throw new IllegalStateException("Already connected.");
+        } else {
+            this.request = new JsonObject();
+
+            this.request.addProperty("type", "USER_STREAM_STATUS");
+            this.request.addProperty("username", username);
+            this.request.addProperty("platform", platform.name());
+            this.request.addProperty("nonce", "_login");
+
+            this.socket.connect();
+
+            return this;
+        }
     }
 
-    public void add(String streamer, String platform) {
-        JsonObject request = new JsonObject();
+    public Koi login(String token) {
+        if (this.isConnected()) {
+            throw new IllegalStateException("Already connected.");
+        } else {
+            this.request = new JsonObject();
 
-        request.addProperty("request", "ADD");
-        request.addProperty("user", streamer);
-        request.addProperty("platform", platform);
+            this.request.addProperty("type", "LOGIN");
+            this.request.addProperty("token", token);
+            this.request.addProperty("nonce", "_login");
 
-        this.socket.send(request.toString());
-    }
+            this.socket.connect();
 
-    public void remove(String streamer) {
-        this.remove(streamer, UserPlatform.CAFFEINE.name());
-    }
-
-    public void remove(String streamer, String platform) {
-        JsonObject request = new JsonObject();
-
-        request.addProperty("request", "REMOVE");
-        request.addProperty("user", streamer);
-        request.addProperty("platform", platform);
-
-        this.socket.send(request.toString());
+            return this;
+        }
     }
 
     private class KoiSocket extends WebSocketClient {
@@ -106,20 +99,45 @@ public class Koi {
         }
 
         @Override
-        public void onOpen(ServerHandshake handshakedata) {}
+        public void onOpen(ServerHandshake handshakedata) {
+            if (request == null) {
+                this.close();
+            } else {
+                this.send(request.toString());
+                request = null;
+            }
+        }
+
+        @Override
+        public void send(String text) {
+            logger.debug("\u2191 " + text);
+
+            super.send(text);
+        }
+
+        private void keepAlive(JsonElement nonce) {
+            JsonObject request = new JsonObject();
+
+            request.addProperty("type", "KEEP_ALIVE");
+            request.add("nonce", nonce);
+
+            this.send(request.toString());
+        }
 
         @Override
         public void onMessage(String raw) {
+            logger.debug("\u2193 " + raw);
+
             try {
                 JsonObject packet = gson.fromJson(raw, JsonObject.class);
 
                 switch (packet.get("type").getAsString()) {
                     case "KEEP_ALIVE":
-                        this.keepAlive();
+                        this.keepAlive(packet.get("nonce"));
                         return;
 
                     case "SERVER":
-                        // System.out.println(raw);
+                        listener.onServerMessage(packet.get("server").getAsString());
                         return;
 
                     case "EVENT":
@@ -131,7 +149,7 @@ public class Koi {
                         return;
                 }
             } catch (Exception e) {
-                logger.exception(e);
+                listener.onException(e);
             }
         }
 
@@ -139,19 +157,15 @@ public class Koi {
         @Override
         public void onClose(int code, String reason, boolean remote) {
             if (remote) logger.info("Lost connection to Koi.");
-        }
 
-        private void keepAlive() {
-            JsonObject request = new JsonObject();
-
-            request.addProperty("request", "KEEP_ALIVE");
-
-            this.send(request.toString());
+            // So the user can immediately reconnect without
+            // errors from the underlying library.
+            new Thread(() -> listener.onClose()).start();
         }
 
         @Override
         public void onError(Exception e) {
-            logger.exception(e);
+            listener.onException(e);
         }
 
     }
