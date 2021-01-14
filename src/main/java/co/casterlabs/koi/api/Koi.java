@@ -20,7 +20,7 @@ import lombok.SneakyThrows;
 import xyz.e3ndr.fastloggingframework.logging.FastLogger;
 
 public class Koi implements Closeable {
-    public static final String VERSION = "2.0.0";
+    public static final String VERSION = "2.0.1";
 
     private static @Getter URI koiUri;
     private static @Getter Gson gson = new Gson();
