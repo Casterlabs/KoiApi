@@ -20,7 +20,7 @@ import lombok.SneakyThrows;
 import xyz.e3ndr.fastloggingframework.logging.FastLogger;
 
 public class Koi implements Closeable {
-    public static final String VERSION = "2.0.1";
+    public static final String VERSION = "2.0.2";
 
     private static @Getter URI koiUri;
     private static @Getter Gson gson = new Gson();
@@ -48,6 +48,10 @@ public class Koi implements Closeable {
         this.logger = logger;
         this.listener = listener;
         this.socket = new KoiSocket(uri);
+    }
+
+    public void setClientId(@NonNull String clientId) {
+        this.socket.addHeader("User-Agent", clientId);
     }
 
     @Override
@@ -96,6 +100,8 @@ public class Koi implements Closeable {
 
         public KoiSocket(URI uri) {
             super(uri);
+
+            this.setTcpNoDelay(true);
         }
 
         @Override
@@ -153,14 +159,17 @@ public class Koi implements Closeable {
             }
         }
 
-        @SneakyThrows
         @Override
         public void onClose(int code, String reason, boolean remote) {
-            if (remote) logger.info("Lost connection to Koi.");
-
-            // So the user can immediately reconnect without
-            // errors from the underlying library.
-            new Thread(() -> listener.onClose()).start();
+            if (listener == null) {
+                if (remote) {
+                    logger.info("Lost connection to Koi.");
+                }
+            } else {
+                // So the user can immediately reconnect without
+                // errors from the underlying library.
+                new Thread(() -> listener.onClose(remote)).start();
+            }
         }
 
         @Override
