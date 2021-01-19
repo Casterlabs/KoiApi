@@ -101,6 +101,7 @@ public class Koi implements Closeable {
         public KoiSocket(URI uri) {
             super(uri);
 
+            this.addHeader("User-Agent", "Koi-Api");
             this.setTcpNoDelay(true);
         }
 
