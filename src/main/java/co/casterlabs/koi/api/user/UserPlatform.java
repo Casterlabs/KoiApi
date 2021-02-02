@@ -12,6 +12,8 @@ public enum UserPlatform {
         PlatformFeatures.CHAT_UPVOTES
     ),
     
+    TROVO(),
+    
     TWITCH();
     
     //@formatter:on
