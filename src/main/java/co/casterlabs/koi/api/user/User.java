@@ -14,7 +14,9 @@ public class User {
     private List<String> badges;
     private String color;
     private String username;
+    private String displayname;
     private String UUID;
+    private String UPID;
     private String link;
 
     @SerializedName("image_link")
