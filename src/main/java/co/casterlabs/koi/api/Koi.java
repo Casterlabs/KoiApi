@@ -2,7 +2,6 @@ package co.casterlabs.koi.api;
 
 import java.io.Closeable;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -20,9 +19,9 @@ import lombok.SneakyThrows;
 import xyz.e3ndr.fastloggingframework.logging.FastLogger;
 
 public class Koi implements Closeable {
-    public static final String VERSION = "2.0.3";
+    public static final String VERSION = "2.1.0";
 
-    private static @Getter URI koiUri;
+    private static final @Getter String koiUrl = "wss://api.casterlabs.co/v2/koi";
     private static @Getter Gson gson = new Gson();
 
     private EventListener listener;
@@ -31,27 +30,15 @@ public class Koi implements Closeable {
 
     private JsonObject request;
 
-    static {
-        try {
-            koiUri = new URI("wss://api.casterlabs.co/v2/koi");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Koi(@NonNull EventListener listener) {
-        this(koiUri, new FastLogger(), listener);
+    public Koi(@NonNull EventListener listener, String clientId) {
+        this(koiUrl, new FastLogger(), listener, clientId);
     }
 
     @SneakyThrows
-    public Koi(@NonNull URI uri, @NonNull FastLogger logger, @NonNull EventListener listener) {
+    public Koi(@NonNull String url, @NonNull FastLogger logger, @NonNull EventListener listener, String clientId) {
         this.logger = logger;
         this.listener = listener;
-        this.socket = new KoiSocket(uri);
-    }
-
-    public void setClientId(@NonNull String clientId) {
-        this.socket.addHeader("User-Agent", clientId);
+        this.socket = new KoiSocket(new URI(url + "?client_id=" + clientId));
     }
 
     @Override
