@@ -8,6 +8,10 @@ import lombok.NonNull;
 public enum UserPlatform {
     //@formatter:off
     
+    BRIME(), 
+    
+    GLIMESH(),
+    
     CAFFEINE(
         PlatformFeatures.CHAT_UPVOTES
     ),
