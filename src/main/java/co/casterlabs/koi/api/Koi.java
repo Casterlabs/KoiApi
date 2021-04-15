@@ -19,7 +19,7 @@ import lombok.SneakyThrows;
 import xyz.e3ndr.fastloggingframework.logging.FastLogger;
 
 public class Koi implements Closeable {
-    public static final String VERSION = "2.1.0";
+    public static final String VERSION = "2.3.0";
 
     private static final @Getter String koiUrl = "wss://api.casterlabs.co/v2/koi";
     private static @Getter Gson gson = new Gson();
@@ -50,7 +50,7 @@ public class Koi implements Closeable {
         return this.socket.isOpen();
     }
 
-    public Koi hookStreamStatus(String username, UserPlatform platform) {
+    public Koi hookStreamStatus(String username, UserPlatform platform) throws InterruptedException {
         if (this.isConnected()) {
             throw new IllegalStateException("Already connected.");
         } else {
@@ -61,13 +61,13 @@ public class Koi implements Closeable {
             this.request.addProperty("platform", platform.name());
             this.request.addProperty("nonce", "_login");
 
-            this.socket.connect();
+            this.socket.connectBlocking();
 
             return this;
         }
     }
 
-    public Koi login(String token) {
+    public Koi login(String token) throws InterruptedException {
         if (this.isConnected()) {
             throw new IllegalStateException("Already connected.");
         } else {
@@ -77,7 +77,7 @@ public class Koi implements Closeable {
             this.request.addProperty("token", token);
             this.request.addProperty("nonce", "_login");
 
-            this.socket.connect();
+            this.socket.connectBlocking();
 
             return this;
         }
